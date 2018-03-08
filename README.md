@@ -3,6 +3,9 @@
 
 ###项目未完工.
 
+
+### 实现详细说明转blog -> l0phtg.github.io
+
 编码, 对thumb指令编码为自己定义的opcode
 
 $ python main.py
