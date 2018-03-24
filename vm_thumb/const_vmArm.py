@@ -28,6 +28,8 @@ DATA_OP    =    {
                         "push"  : "VM_OP_PUSH", # 16位指令
                         "pop"   : "VM_OP_POP",
 
+                        "ldrliteral" : "VM_OP_LDRLITERAL",
+
                         "str"   : "VM_OP_STR",  
                         "strh"  : "VM_OP_STRH",
                         "strb"  : "VM_OP_STRB",
@@ -78,11 +80,13 @@ DATA_OP_BYTE16 = {
         "VM_OP_JUMP"   :  "0010",
         "VM_OP_B"      :  "0010",
         "VM_OP_BL"     :  "",
-        "VM_OP_BX"     :  "000010000",
-        "VM_OP_BLX"    :  "000010001",
+        "VM_OP_BX"     :  "000000000",
+        "VM_OP_BLX"    :  "000000001",
         
+        "VM_OP_LDRLITERAL" : "00001",
         "VM_OP_STM"    :  "00010",
         "VM_OP_LDM"    :  "00011",
+
 
         "VM_OP_IT"     :  "11100000",
         #"VM_OP_NOP"    :  "11100001"

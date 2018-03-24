@@ -146,7 +146,17 @@ class VsInsn(object):
             Rt = self._raw.reg_name(self._raw.operands[0].reg)
             Rn = self._raw.reg_name(self._raw.operands[1].mem.base)
 
-            if self._raw.operands[1].mem.disp == 0:            # [reg, {reg}]
+
+            if str(Rn) == "pc":                            # ldr Rn, [pc, #imm]
+                vm_op = DATA_OP["ldrliteral"]
+                result = bin16toByte(DATA_OP_BYTE16[vm_op] + reg2bin(Rt, 3) + int2formatBin(self._raw.bytes[1], 8))
+
+            elif _rawInsnName in ['ldrpc', 'ldrsp', 'strsp']:
+                imm8 = hex2int(to_x_32(self._raw.operands[1].mem.disp))
+                result = bin16toByte(LS_MIS[_rawInsnName+Rn] + reg2bin(Rt, 4) + int2formatBin(imm8/4, 8))
+
+
+            elif self._raw.operands[1].mem.disp == 0:            # [reg, {reg}]
                 if self._raw.operands[1].mem.index != 0:
                     Rm = reg2bin(self._raw.reg_name(self._raw.operands[1].mem.index), 3) 
                 else: 
@@ -154,14 +164,9 @@ class VsInsn(object):
                 result = bin16toByte(LS_REG[vm_op] + reg2bin(Rt, 3) + reg2bin(Rn, 3) + Rm)  
             else:                                              # [reg, imm]
                 if self._raw.operands[1].mem.disp != 0:
-                    #imm5 = hex2int(to_x_32(self._raw.operands[1].mem.disp))
                     imm5 = self._raw.operands[1].mem.disp
-                    #sys.stdout.write(to_x_32(self._raw.operands[1].mem.disp))
-                    #sys.stdout.write()
                     result = bin16toByte(LS_IMM[vm_op] + reg2bin(Rt, 3) + reg2bin(Rn, 3) + int2formatBin(imm5/4, 5)) 
-                else:
-                    imm8 = hex2int(to_x_32(self._raw.operands[1].mem.disp))
-                    result = bin16toByte(LS_MIS[_rawInsnName+Rn] + reg2bin(Rt, 4) + int2formatBin(imm8/4, 8))
+
         elif _rawInsnName in ['stm', 'ldm']:
             vm_op = DATA_OP[_rawInsnName]
             Rm = self._raw.reg_name(self._raw.operands[0].reg)
@@ -173,13 +178,9 @@ class VsInsn(object):
             result = bin16toByte(DATA_OP_BYTE16[vm_op] + int2formatBin(self._raw.bytes[1], 8))
         elif _rawInsnName in ['b', 'bx', 'blx']:
             vm_op = DATA_OP[_rawInsnName]
-            if not self._raw.cc in [ARM_CC_AL, ARM_CC_INVALID]:
-                my_cond = Cond_Collection[self._raw.cc]
-                imm8 =  hex2int(to_x_32(self._raw.operands[0].imm))
-                result = bin16toByte(DATA_OP_BYTE16[vm_op] + my_cond + int2formatBin(imm8/4, 8))
-            if _rawInsnName is 'b':
-                imm8 = hex2int(to_x_32(self._raw.operands[0].imm))
-                result = bin16toByte(DATA_OP_BYTE16[vm_op] + "1111" + int2formatBin(imm8/4, 8))
+            if _rawInsnName == 'b':
+                my_cond = self._raw.cc
+                result = bin16toByte(DATA_OP_BYTE16[vm_op] + int2formatBin(my_cond, 4) + int2formatBin(self._raw.bytes[1], 8))
 
             elif _rawInsnName == 'bx':
                 Rm = self._raw.reg_name(self._raw.operands[0].reg)
@@ -196,6 +197,8 @@ class VsInsn(object):
 
     @property
     def mnemonic(self):
+        if not self._raw.cc in [ARM_CC_AL, ARM_CC_INVALID]:       ## 有条件, 其实thumb16中, 就只是针对于跳转指令.
+            return "vm_" + self._raw.mnemonic
         return "vm_"+self._raw.insn_name()+"s" if self._raw.update_flags else "vm_" + self._raw.insn_name() 
 
     @property
@@ -234,6 +237,8 @@ def bin8toByte(binNumber):
     return int(binNumber, 2)
 
 def bin16toByte(binNumber):             # return a list
+    #sys.stdout.write("\n")
+    #sys.stdout.write[("number: %d \n" % int(binNumber[0:8], 2))
     return [int(binNumber[0:8], 2), int(binNumber[8:], 2)]
 
 def bin24toByte(binNumber):
